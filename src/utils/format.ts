@@ -14,8 +14,15 @@ export function formatAmount(amount: number): string {
   })
 }
 
-/** Parse sheet date string M/D/YYYY → Date */
+/** Parse sheet date string — handles M/D/YYYY and ISO 8601 formats */
 export function parseSheetDate(dateStr: string): Date {
+  // ISO format: 2026-04-05T17:00:00.000Z or 2026-04-05
+  if (dateStr.includes('-')) {
+    const d = new Date(dateStr)
+    // Use UTC values to avoid timezone shift
+    return new Date(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
+  }
+  // Legacy M/D/YYYY format
   const [month, day, year] = dateStr.split('/')
   return new Date(parseInt(year), parseInt(month) - 1, parseInt(day))
 }
