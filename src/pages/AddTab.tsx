@@ -44,10 +44,7 @@ function Numpad({ value, onChange, onClose }: NumpadProps) {
   const KEYS = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '.', '0', '⌫']
 
   return (
-    <div
-      className="fixed inset-x-0 top-0 bg-slate-950 flex flex-col animate-fade-in"
-      style={{ height: '100svh', zIndex: 9999 }}
-    >
+    <div className="fixed inset-0 bg-slate-950 flex flex-col animate-fade-in" style={{ zIndex: 9999 }}>
       {/* Amount display */}
       <div className="flex-1 flex flex-col items-center justify-center pb-4">
         <p className="text-slate-400 text-sm mb-1">Amount</p>
@@ -56,32 +53,31 @@ function Numpad({ value, onChange, onClose }: NumpadProps) {
         </p>
       </div>
 
-      {/* Numpad grid */}
-      <div className="grid grid-cols-3 gap-px bg-slate-700/30 border-t border-slate-700/50">
+      {/* Numpad + Done button as one unified grid — Done always visible */}
+      <div className="grid grid-cols-3 gap-px bg-slate-700/30 border-t border-slate-700/50 shrink-0">
         {KEYS.map((k) => (
           <button
             key={k}
             onPointerDown={(e) => { e.preventDefault(); press(k) }}
             className={`h-16 text-2xl font-semibold flex items-center justify-center active:bg-slate-600 transition-colors ${
-              k === '⌫' ? 'text-slate-400 text-xl' : 'text-white bg-slate-800'
+              k === '⌫' ? 'text-slate-400 text-xl bg-slate-800' : 'text-white bg-slate-800'
             }`}
           >
             {k}
           </button>
         ))}
+        {/* Done spans all 3 columns — part of the grid, always on screen */}
+        <button
+          onPointerDown={(e) => { e.preventDefault(); onClose() }}
+          className="col-span-3 bg-violet-600 active:bg-violet-700 text-white font-semibold text-lg flex items-center justify-center transition-colors"
+          style={{
+            height: 'calc(3.5rem + env(safe-area-inset-bottom, 0px))',
+            paddingBottom: 'env(safe-area-inset-bottom, 0px)',
+          }}
+        >
+          Done ✓
+        </button>
       </div>
-
-      {/* Done button — always visible above Safari toolbar */}
-      <button
-        onPointerDown={(e) => { e.preventDefault(); onClose() }}
-        className="bg-violet-600 active:bg-violet-700 text-white font-semibold text-lg transition-colors shrink-0"
-        style={{
-          paddingTop: '1.25rem',
-          paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom, 16px))',
-        }}
-      >
-        Done ✓
-      </button>
     </div>
   )
 }
