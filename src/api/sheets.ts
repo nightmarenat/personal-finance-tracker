@@ -1,20 +1,16 @@
+/**
+ * All reads and writes go through a Google Apps Script web app URL.
+ * No OAuth, no Google Cloud account required.
+ */
 import type { Transaction, PaymentMethod, ValueAlignment } from '../types'
 
-const SHEETS_BASE = 'https://sheets.googleapis.com/v4/spreadsheets'
+export async function fetchTransactions(scriptUrl: string): Promise<Transaction[]> {
+  const url = `${scriptUrl}?action=read`
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`Failed to fetch: ${res.status}`)
+  const data = await res.json()
+  if (data.error) throw new Error(data.error)
 
-// Sheet IDs are fixed — no env var needed for reads/writes
-const TRANSACTIONS_SHEET_ID =
-  import.meta.env.VITE_TRANSACTIONS_SHEET_ID ?? '1Cp0-u1N_n7VXPz773rZUGLUshoTPV_NDGmYaZjQn7Gw'
-
-async function sheetsGet(token: string, sheetId: string, range: string) {
-  const url = `${SHEETS_BASE}/${sheetId}/values/${encodeURIComponent(range)}`
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } })
-  if (!res.ok) throw new Error(`Sheets API error ${res.status}: ${await res.text()}`)
-  return res.json()
-}
-
-export async function fetchTransactions(token: string): Promise<Transaction[]> {
-  const data = await sheetsGet(token, TRANSACTIONS_SHEET_ID, 'A:H')
   const rows: string[][] = data.values ?? []
   return rows.slice(1).flatMap((row) => {
     const [date, type, amount, categoryGroup, subcategory, paymentMethod, valueAlignment, note] = row
@@ -32,7 +28,10 @@ export async function fetchTransactions(token: string): Promise<Transaction[]> {
   })
 }
 
-export async function appendTransaction(token: string, transaction: Transaction): Promise<void> {
+export async function appendTransaction(
+  scriptUrl: string,
+  transaction: Transaction,
+): Promise<void> {
   const row = [
     transaction.date,
     transaction.type,
@@ -43,14 +42,11 @@ export async function appendTransaction(token: string, transaction: Transaction)
     transaction.valueAlignment,
     transaction.note,
   ]
-  const encodedRange = encodeURIComponent('A:H')
-  const url =
-    `${SHEETS_BASE}/${TRANSACTIONS_SHEET_ID}/values/${encodedRange}:append` +
-    `?valueInputOption=USER_ENTERED&insertDataOption=INSERT_ROWS`
-  const res = await fetch(url, {
-    method: 'POST',
-    headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ values: [row] }),
-  })
-  if (!res.ok) throw new Error(`Sheets API error ${res.status}: ${await res.text()}`)
+  // Send as GET to avoid CORS preflight issues with Apps Script
+  const encoded = encodeURIComponent(JSON.stringify(row))
+  const url = `${scriptUrl}?action=append&row=${encoded}`
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`Failed to save: ${res.status}`)
+  const data = await res.json()
+  if (data.error) throw new Error(data.error)
 }

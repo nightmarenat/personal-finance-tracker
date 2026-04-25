@@ -1,78 +1,42 @@
-import { createContext, useContext, useState, useEffect } from 'react'
+/**
+ * AuthContext — no OAuth, no Google Cloud.
+ * The user just pastes their Apps Script URL once.
+ * It's stored in localStorage and used for all reads/writes.
+ */
+import { createContext, useContext, useState } from 'react'
 
-const SCOPE = 'https://www.googleapis.com/auth/spreadsheets'
-const CLIENT_ID_KEY = 'finance_google_client_id'
+const SCRIPT_URL_KEY = 'finance_script_url'
 
 interface AuthContextType {
-  token: string | null
-  clientId: string | null
-  saveClientId: (id: string) => void
-  clearClientId: () => void
-  login: () => void
-  logout: () => void
+  scriptUrl: string | null
+  saveScriptUrl: (url: string) => void
+  clearScriptUrl: () => void
 }
 
 const AuthContext = createContext<AuthContextType>({
-  token: null,
-  clientId: null,
-  saveClientId: () => {},
-  clearClientId: () => {},
-  login: () => {},
-  logout: () => {},
+  scriptUrl: null,
+  saveScriptUrl: () => {},
+  clearScriptUrl: () => {},
 })
 
-function initiateLogin(clientId: string) {
-  const redirectUri = window.location.origin  // e.g. http://localhost:5173
-  const params = new URLSearchParams({
-    client_id: clientId,
-    redirect_uri: redirectUri,
-    response_type: 'token',
-    scope: SCOPE,
-    include_granted_scopes: 'true',
-  })
-  window.location.href = `https://accounts.google.com/o/oauth2/v2/auth?${params}`
-}
-
-function consumeTokenFromHash(): string | null {
-  const hash = window.location.hash.slice(1)
-  if (!hash) return null
-  const params = new URLSearchParams(hash)
-  const token = params.get('access_token')
-  if (token) {
-    window.history.replaceState(null, '', window.location.pathname + window.location.search)
-  }
-  return token
-}
-
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [clientId, setClientId] = useState<string | null>(
-    () => localStorage.getItem(CLIENT_ID_KEY),
+  const [scriptUrl, setScriptUrl] = useState<string | null>(
+    () => localStorage.getItem(SCRIPT_URL_KEY),
   )
-  const [token, setToken] = useState<string | null>(null)
 
-  useEffect(() => {
-    const t = consumeTokenFromHash()
-    if (t) setToken(t)
-  }, [])
-
-  const saveClientId = (id: string) => {
-    const trimmed = id.trim()
-    localStorage.setItem(CLIENT_ID_KEY, trimmed)
-    setClientId(trimmed)
+  const saveScriptUrl = (url: string) => {
+    const trimmed = url.trim()
+    localStorage.setItem(SCRIPT_URL_KEY, trimmed)
+    setScriptUrl(trimmed)
   }
 
-  const clearClientId = () => {
-    localStorage.removeItem(CLIENT_ID_KEY)
-    setClientId(null)
-    setToken(null)
-  }
-
-  const login = () => {
-    if (clientId) initiateLogin(clientId)
+  const clearScriptUrl = () => {
+    localStorage.removeItem(SCRIPT_URL_KEY)
+    setScriptUrl(null)
   }
 
   return (
-    <AuthContext.Provider value={{ token, clientId, saveClientId, clearClientId, login, logout: () => setToken(null) }}>
+    <AuthContext.Provider value={{ scriptUrl, saveScriptUrl, clearScriptUrl }}>
       {children}
     </AuthContext.Provider>
   )

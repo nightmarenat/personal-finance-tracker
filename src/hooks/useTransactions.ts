@@ -9,28 +9,26 @@ interface UseTransactionsReturn {
   refetch: () => void
 }
 
-export function useTransactions(token: string | null): UseTransactionsReturn {
+export function useTransactions(scriptUrl: string | null): UseTransactionsReturn {
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
   const load = useCallback(async () => {
-    if (!token) return
+    if (!scriptUrl) return
     setLoading(true)
     setError(null)
     try {
-      const data = await fetchTransactions(token)
+      const data = await fetchTransactions(scriptUrl)
       setTransactions(data)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load transactions')
     } finally {
       setLoading(false)
     }
-  }, [token])
+  }, [scriptUrl])
 
-  useEffect(() => {
-    load()
-  }, [load])
+  useEffect(() => { load() }, [load])
 
   return { transactions, loading, error, refetch: load }
 }

@@ -129,7 +129,7 @@ interface Props {
 }
 
 export function AddTab({ onSaved, isDemo = false }: Props) {
-  const { token, login } = useAuth()
+  const { scriptUrl } = useAuth()
   const [date, setDate] = useState(new Date())
   const [type, setType] = useState<TransactionType>('Expense')
   const [amountStr, setAmountStr] = useState('')
@@ -186,11 +186,11 @@ export function AddTab({ onSaved, isDemo = false }: Props) {
       return
     }
 
-    if (!token) { login(); return }
+    if (!scriptUrl) return
 
     setSaving(true)
     try {
-      await appendTransaction(token, transaction)
+      await appendTransaction(scriptUrl, transaction)
       setToast({ msg: 'Transaction saved!', type: 'success' })
       // Reset form but keep date and type
       setAmountStr('')
@@ -425,7 +425,7 @@ export function AddTab({ onSaved, isDemo = false }: Props) {
               : 'bg-slate-800 text-slate-600 cursor-not-allowed'
           }`}
         >
-          {saving ? 'Saving...' : !token ? '🔑 Connect Google & Save' : 'Save Transaction'}
+          {saving ? 'Saving…' : 'Save Transaction'}
         </button>
       </div>
     </div>
