@@ -95,11 +95,15 @@ function DateSheet({ value, onChange, onClose }: DateSheetProps) {
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end bg-black/60 animate-fade-in" onClick={onClose}>
+    <div
+      className="fixed inset-0 flex items-end bg-black/60 animate-fade-in"
+      style={{ zIndex: 9999 }}
+      onClick={onClose}
+    >
       <div
         className="w-full bg-slate-900 rounded-t-3xl p-6 animate-slide-up"
         onClick={(e) => e.stopPropagation()}
-        style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom))' }}
+        style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 80px))' }}
       >
         <div className="w-10 h-1 bg-slate-600 rounded-full mx-auto mb-5" />
         <p className="text-base font-semibold text-white mb-4">Select Date</p>
