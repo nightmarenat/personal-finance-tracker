@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { BottomTabBar } from './components/BottomTabBar'
 import { SummaryTab } from './pages/SummaryTab'
 import { AddTab } from './pages/AddTab'
@@ -203,19 +203,46 @@ function AppShell({
   onExitDemo: () => void
 }) {
   const [activeTab, setActiveTab] = useState<TabId>('summary')
+
+  // Shared month state — Summary and Breakdown always show the same month
+  const now = new Date()
+  const [year, setYear] = useState(now.getFullYear())
+  const [month, setMonth] = useState(now.getMonth())
+  const prevMonth = useCallback(() => {
+    setYear((y) => month === 0 ? y - 1 : y)
+    setMonth((m) => m === 0 ? 11 : m - 1)
+  }, [month])
+  const nextMonth = useCallback(() => {
+    setYear((y) => month === 11 ? y + 1 : y)
+    setMonth((m) => m === 11 ? 0 : m + 1)
+  }, [month])
+  const goToday = useCallback(() => {
+    setYear(now.getFullYear())
+    setMonth(now.getMonth())
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
+  const isCurrentMonth = year === now.getFullYear() && month === now.getMonth()
+
   return (
     <div className="min-h-screen bg-slate-950 flex flex-col">
       <div className="safe-top bg-slate-950" />
       {isDemo && <DemoBanner onExit={onExitDemo} />}
       <main className="flex-1 overflow-hidden">
         <div className={activeTab === 'summary' ? 'block h-full' : 'hidden'}>
-          <SummaryTab transactions={transactions} loading={loading} error={error} />
+          <SummaryTab
+            transactions={transactions} loading={loading} error={error}
+            year={year} month={month} onPrev={prevMonth} onNext={nextMonth}
+            isCurrentMonth={isCurrentMonth} onGoToday={goToday}
+          />
         </div>
         <div className={activeTab === 'add' ? 'block h-full' : 'hidden'}>
           <AddTab onSaved={onSaved} isDemo={isDemo} />
         </div>
         <div className={activeTab === 'breakdown' ? 'block h-full' : 'hidden'}>
-          <BreakdownTab transactions={transactions} loading={loading} />
+          <BreakdownTab
+            transactions={transactions} loading={loading}
+            year={year} month={month} onPrev={prevMonth} onNext={nextMonth}
+            isCurrentMonth={isCurrentMonth} onGoToday={goToday}
+          />
         </div>
       </main>
       <BottomTabBar active={activeTab} onChange={setActiveTab} />

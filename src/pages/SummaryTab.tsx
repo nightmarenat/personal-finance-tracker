@@ -1,7 +1,6 @@
 import { useState, useMemo } from 'react'
 import { MonthNavigator } from '../components/MonthNavigator'
 import { SummaryTabSkeleton } from '../components/LoadingSkeleton'
-import { useMonthNavigation } from '../hooks/useMonthNavigation'
 import { getGroupConfig, GROUP_CONFIGS } from '../constants/categories'
 import { formatAmount, formatDisplayDate, isInMonth, parseSheetDate } from '../utils/format'
 import type { Transaction } from '../types'
@@ -10,10 +9,15 @@ interface Props {
   transactions: Transaction[]
   loading: boolean
   error: string | null
+  year: number
+  month: number
+  onPrev: () => void
+  onNext: () => void
+  isCurrentMonth: boolean
+  onGoToday: () => void
 }
 
-export function SummaryTab({ transactions, loading, error }: Props) {
-  const { year, month, prev, next } = useMonthNavigation()
+export function SummaryTab({ transactions, loading, error, year, month, onPrev, onNext, isCurrentMonth, onGoToday }: Props) {
   const [expandedGroup, setExpandedGroup] = useState<string | null>(null)
 
   const filtered = useMemo(
@@ -64,7 +68,7 @@ export function SummaryTab({ transactions, loading, error }: Props) {
 
   return (
     <div className="pb-tab-bar overflow-y-auto scrollbar-hide">
-      <MonthNavigator year={year} month={month} onPrev={prev} onNext={next} />
+      <MonthNavigator year={year} month={month} onPrev={onPrev} onNext={onNext} isCurrentMonth={isCurrentMonth} onGoToday={onGoToday} />
 
       {/* Net balance hero card */}
       {(() => {
@@ -106,13 +110,13 @@ export function SummaryTab({ transactions, loading, error }: Props) {
       {/* Category group cards */}
       <div className="px-4 space-y-2.5">
         <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 px-1">
-          By Category
+          Expenses by Category
         </p>
 
-        {filtered.length === 0 && (
-          <div className="rounded-2xl bg-slate-800 p-8 text-center">
-            <p className="text-3xl mb-2">🌙</p>
-            <p className="text-slate-400 text-sm">No transactions this month</p>
+        {filtered.filter(t => t.type === 'Expense').length === 0 && (
+          <div className="rounded-2xl bg-slate-800 p-6 text-center">
+            <p className="text-2xl mb-2">🌙</p>
+            <p className="text-slate-400 text-sm">No expenses this month</p>
           </div>
         )}
 
@@ -175,6 +179,34 @@ export function SummaryTab({ transactions, loading, error }: Props) {
           )
         })}
       </div>
+
+      {/* Income sources */}
+      {totalIncome > 0 && (
+        <div className="px-4 mt-4 space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 px-1">
+            Income Sources
+          </p>
+          {(() => {
+            const incomeMap: Record<string, number> = {}
+            filtered.filter(t => t.type === 'Income').forEach(t => {
+              incomeMap[t.subcategory] = (incomeMap[t.subcategory] ?? 0) + t.amount
+            })
+            return Object.entries(incomeMap)
+              .sort(([, a], [, b]) => b - a)
+              .map(([sub, amount]) => (
+                <div key={sub} className="rounded-2xl bg-slate-800 overflow-hidden" style={{ borderLeft: '3px solid #10b981' }}>
+                  <div className="flex items-center justify-between p-4">
+                    <div className="flex items-center gap-2.5">
+                      <span className="text-xl">💰</span>
+                      <span className="font-semibold text-white text-sm">{sub}</span>
+                    </div>
+                    <span className="font-semibold text-emerald-400 text-sm">{formatAmount(amount)}</span>
+                  </div>
+                </div>
+              ))
+          })()}
+        </div>
+      )}
 
       {/* Recent Transactions */}
       {recentTransactions.length > 0 && (

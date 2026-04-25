@@ -12,7 +12,6 @@ import {
 } from 'recharts'
 import { MonthNavigator } from '../components/MonthNavigator'
 import { BreakdownSkeleton } from '../components/LoadingSkeleton'
-import { useMonthNavigation } from '../hooks/useMonthNavigation'
 import { GROUP_CONFIGS, getGroupConfig } from '../constants/categories'
 import { formatAmount, isInMonth } from '../utils/format'
 import type { Transaction } from '../types'
@@ -20,12 +19,17 @@ import type { Transaction } from '../types'
 interface Props {
   transactions: Transaction[]
   loading: boolean
+  year: number
+  month: number
+  onPrev: () => void
+  onNext: () => void
+  isCurrentMonth: boolean
+  onGoToday: () => void
 }
 
 type ViewMode = 'group' | 'subcategory'
 
-export function BreakdownTab({ transactions, loading }: Props) {
-  const { year, month, prev, next } = useMonthNavigation()
+export function BreakdownTab({ transactions, loading, year, month, onPrev, onNext, isCurrentMonth, onGoToday }: Props) {
   const [viewMode, setViewMode] = useState<ViewMode>('group')
 
   const expenses = useMemo(
@@ -86,7 +90,7 @@ export function BreakdownTab({ transactions, loading }: Props) {
 
   return (
     <div className="pb-tab-bar overflow-y-auto scrollbar-hide">
-      <MonthNavigator year={year} month={month} onPrev={prev} onNext={next} />
+      <MonthNavigator year={year} month={month} onPrev={onPrev} onNext={onNext} isCurrentMonth={isCurrentMonth} onGoToday={onGoToday} />
 
       {/* View toggle */}
       <div className="flex mx-4 mb-4 bg-slate-800 rounded-2xl p-1 gap-1">
@@ -198,49 +202,51 @@ export function BreakdownTab({ transactions, loading }: Props) {
             </div>
           )}
 
-          {/* Ranked subcategory list */}
+          {/* Ranked list — group view shows groups, subcategory view shows subcategories */}
           <div className="px-4 space-y-2">
             <p className="text-xs font-semibold uppercase tracking-widest text-slate-500 px-1 mb-3">
               Ranked
             </p>
-            {subcatData.map((item, i) => (
-              <div key={item.name} className="bg-slate-800 rounded-2xl px-4 py-3">
-                <div className="flex items-center gap-3 mb-2">
-                  <span className="text-slate-500 text-sm font-bold w-5 text-center">
-                    {i + 1}
-                  </span>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-white truncate">{item.name}</span>
-                      <span
-                        className="text-[10px] px-1.5 py-0.5 rounded-full font-medium flex-shrink-0"
-                        style={{ backgroundColor: item.color + '33', color: item.color }}
-                      >
-                        {item.groupIcon} {item.group}
-                      </span>
+            {viewMode === 'group'
+              ? groupData.map((item, i) => (
+                <div key={item.name} className="bg-slate-800 rounded-2xl px-4 py-3">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-slate-500 text-sm font-bold w-5 text-center">{i + 1}</span>
+                    <span className="text-lg">{item.icon}</span>
+                    <span className="flex-1 text-sm font-medium text-white">{item.name}</span>
+                    <span className="text-sm font-semibold text-white">{formatAmount(item.value)}</span>
+                  </div>
+                  <div className="flex items-center gap-2 pl-8">
+                    <div className="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full transition-all" style={{ width: `${item.pct}%`, backgroundColor: item.color }} />
                     </div>
+                    <span className="text-xs text-slate-400 w-9 text-right">{item.pct.toFixed(0)}%</span>
                   </div>
-                  <span className="text-sm font-semibold text-white flex-shrink-0">
-                    {formatAmount(item.amount)}
-                  </span>
                 </div>
-                {/* Percentage bar */}
-                <div className="flex items-center gap-2 pl-8">
-                  <div className="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all"
-                      style={{
-                        width: `${item.pct}%`,
-                        backgroundColor: item.color,
-                      }}
-                    />
+              ))
+              : subcatData.map((item, i) => (
+                <div key={item.name} className="bg-slate-800 rounded-2xl px-4 py-3">
+                  <div className="flex items-center gap-3 mb-2">
+                    <span className="text-slate-500 text-sm font-bold w-5 text-center">{i + 1}</span>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm font-medium text-white truncate">{item.name}</span>
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-full font-medium flex-shrink-0" style={{ backgroundColor: item.color + '33', color: item.color }}>
+                          {item.groupIcon} {item.group}
+                        </span>
+                      </div>
+                    </div>
+                    <span className="text-sm font-semibold text-white flex-shrink-0">{formatAmount(item.amount)}</span>
                   </div>
-                  <span className="text-xs text-slate-400 w-9 text-right">
-                    {item.pct.toFixed(0)}%
-                  </span>
+                  <div className="flex items-center gap-2 pl-8">
+                    <div className="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">
+                      <div className="h-full rounded-full transition-all" style={{ width: `${item.pct}%`, backgroundColor: item.color }} />
+                    </div>
+                    <span className="text-xs text-slate-400 w-9 text-right">{item.pct.toFixed(0)}%</span>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))
+            }
           </div>
 
           <div className="h-4" />
