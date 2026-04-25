@@ -44,7 +44,10 @@ function Numpad({ value, onChange, onClose }: NumpadProps) {
   const KEYS = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '.', '0', '⌫']
 
   return (
-    <div className="fixed inset-x-0 top-0 z-50 bg-slate-950 flex flex-col animate-fade-in" style={{ height: '100dvh' }}>
+    <div
+      className="fixed inset-x-0 top-0 z-50 bg-slate-950 flex flex-col animate-fade-in"
+      style={{ height: '100svh' }}
+    >
       {/* Amount display */}
       <div className="flex-1 flex flex-col items-center justify-center pb-4">
         <p className="text-slate-400 text-sm mb-1">Amount</p>
@@ -68,11 +71,14 @@ function Numpad({ value, onChange, onClose }: NumpadProps) {
         ))}
       </div>
 
-      {/* Done button */}
+      {/* Done button — always visible above Safari toolbar */}
       <button
         onPointerDown={(e) => { e.preventDefault(); onClose() }}
-        className="bg-violet-600 active:bg-violet-700 text-white font-semibold text-lg py-5 transition-colors"
-        style={{ paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom))' }}
+        className="bg-violet-600 active:bg-violet-700 text-white font-semibold text-lg transition-colors shrink-0"
+        style={{
+          paddingTop: '1.25rem',
+          paddingBottom: 'calc(1.25rem + env(safe-area-inset-bottom, 16px))',
+        }}
       >
         Done ✓
       </button>
