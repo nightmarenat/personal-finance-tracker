@@ -45,8 +45,8 @@ function Numpad({ value, onChange, onClose }: NumpadProps) {
 
   return (
     <div
-      className="fixed inset-x-0 top-0 z-50 bg-slate-950 flex flex-col animate-fade-in"
-      style={{ height: '100svh' }}
+      className="fixed inset-x-0 top-0 bg-slate-950 flex flex-col animate-fade-in"
+      style={{ height: '100svh', zIndex: 9999 }}
     >
       {/* Amount display */}
       <div className="flex-1 flex flex-col items-center justify-center pb-4">
