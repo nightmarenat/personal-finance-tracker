@@ -18,7 +18,7 @@ export async function fetchTransactions(scriptUrl: string): Promise<Transaction[
     return [{
       date: date.trim(),
       type: type.trim() as Transaction['type'],
-      amount: parseFloat(amount.replace(/,/g, '')) || 0,
+      amount: parseFloat(String(amount).replace(/,/g, '')) || 0,
       categoryGroup: (categoryGroup ?? '').trim(),
       subcategory: (subcategory ?? '').trim(),
       paymentMethod: ((paymentMethod ?? 'Cash').trim()) as PaymentMethod,
