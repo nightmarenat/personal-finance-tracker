@@ -1,4 +1,5 @@
 import { useState, useCallback, useRef, useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { Toast } from '../components/Toast'
 import { useAuth } from '../context/AuthContext'
 import { appendTransaction } from '../api/sheets'
@@ -59,7 +60,7 @@ function Numpad({ value, onChange, onClose }: NumpadProps) {
 
   const KEYS = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '.', '0', '⌫']
 
-  return (
+  return createPortal(
     <div
       className="fixed top-0 left-0 right-0 bg-slate-950 flex flex-col animate-fade-in"
       style={{ zIndex: 9999, height: vvh }}
@@ -97,7 +98,8 @@ function Numpad({ value, onChange, onClose }: NumpadProps) {
           Done ✓
         </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
@@ -114,9 +116,9 @@ function DateSheet({ value, onChange, onClose }: DateSheetProps) {
   const toInputVal = (d: Date) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
-  return (
+  return createPortal(
     <div
-      className="fixed top-0 left-0 right-0 flex items-end bg-black/60 animate-fade-in"
+      className="fixed top-0 left-0 right-0 flex items-end bg-black/70 animate-fade-in"
       style={{ zIndex: 9999, height: vvh }}
       onClick={onClose}
     >
@@ -142,7 +144,8 @@ function DateSheet({ value, onChange, onClose }: DateSheetProps) {
           Confirm
         </button>
       </div>
-    </div>
+    </div>,
+    document.body,
   )
 }
 
