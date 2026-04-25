@@ -44,7 +44,7 @@ function Numpad({ value, onChange, onClose }: NumpadProps) {
   const KEYS = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '.', '0', '⌫']
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-950 flex flex-col animate-fade-in">
+    <div className="fixed inset-x-0 top-0 z-50 bg-slate-950 flex flex-col animate-fade-in" style={{ height: '100dvh' }}>
       {/* Amount display */}
       <div className="flex-1 flex flex-col items-center justify-center pb-4">
         <p className="text-slate-400 text-sm mb-1">Amount</p>
