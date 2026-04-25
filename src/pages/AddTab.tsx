@@ -1,10 +1,25 @@
-import { useState, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef, useEffect } from 'react'
 import { Toast } from '../components/Toast'
 import { useAuth } from '../context/AuthContext'
 import { appendTransaction } from '../api/sheets'
 import { EXPENSE_GROUPS, INCOME_GROUPS, getGroupConfig } from '../constants/categories'
 import { formatAmount, formatDateBar, toSheetDate } from '../utils/format'
 import type { Transaction, TransactionType, PaymentMethod, ValueAlignment } from '../types'
+
+// ─── Hook: actual visible viewport height (accounts for Safari browser bar) ──
+function useVisualViewportHeight() {
+  const [height, setHeight] = useState(
+    () => window.visualViewport?.height ?? window.innerHeight,
+  )
+  useEffect(() => {
+    const vv = window.visualViewport
+    if (!vv) return
+    const update = () => setHeight(vv.height)
+    vv.addEventListener('resize', update)
+    return () => vv.removeEventListener('resize', update)
+  }, [])
+  return height
+}
 
 // ─── Numpad ──────────────────────────────────────────────────────────────────
 
@@ -15,6 +30,7 @@ interface NumpadProps {
 }
 
 function Numpad({ value, onChange, onClose }: NumpadProps) {
+  const vvh = useVisualViewportHeight()
   const press = useCallback(
     (key: string) => {
       onChange(
@@ -44,7 +60,10 @@ function Numpad({ value, onChange, onClose }: NumpadProps) {
   const KEYS = ['7', '8', '9', '4', '5', '6', '1', '2', '3', '.', '0', '⌫']
 
   return (
-    <div className="fixed inset-0 bg-slate-950 flex flex-col animate-fade-in" style={{ zIndex: 9999 }}>
+    <div
+      className="fixed top-0 left-0 right-0 bg-slate-950 flex flex-col animate-fade-in"
+      style={{ zIndex: 9999, height: vvh }}
+    >
       {/* Amount display */}
       <div className="flex-1 flex flex-col items-center justify-center pb-4">
         <p className="text-slate-400 text-sm mb-1">Amount</p>
@@ -91,19 +110,19 @@ interface DateSheetProps {
 }
 
 function DateSheet({ value, onChange, onClose }: DateSheetProps) {
+  const vvh = useVisualViewportHeight()
   const toInputVal = (d: Date) =>
     `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
 
   return (
     <div
-      className="fixed inset-0 flex items-end bg-black/60 animate-fade-in"
-      style={{ zIndex: 9999 }}
+      className="fixed top-0 left-0 right-0 flex items-end bg-black/60 animate-fade-in"
+      style={{ zIndex: 9999, height: vvh }}
       onClick={onClose}
     >
       <div
-        className="w-full bg-slate-900 rounded-t-3xl p-6 animate-slide-up"
+        className="w-full bg-slate-900 rounded-t-3xl p-6 pb-8 animate-slide-up"
         onClick={(e) => e.stopPropagation()}
-        style={{ paddingBottom: 'calc(1.5rem + env(safe-area-inset-bottom, 80px))' }}
       >
         <div className="w-10 h-1 bg-slate-600 rounded-full mx-auto mb-5" />
         <p className="text-base font-semibold text-white mb-4">Select Date</p>
