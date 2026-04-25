@@ -66,15 +66,40 @@ export function SummaryTab({ transactions, loading, error }: Props) {
     <div className="pb-tab-bar overflow-y-auto scrollbar-hide">
       <MonthNavigator year={year} month={month} onPrev={prev} onNext={next} />
 
+      {/* Net balance hero card */}
+      {(() => {
+        const net = totalIncome - totalExpense
+        const savingsRate = totalIncome > 0 ? Math.round((net / totalIncome) * 100) : null
+        const isPositive = net >= 0
+        return (
+          <div className="mx-4 mb-3 rounded-2xl bg-gradient-to-br from-slate-800 to-slate-800/60 p-5 border border-slate-700/40">
+            <p className="text-xs text-slate-400 mb-1 font-medium">Net Balance</p>
+            <p className={`text-3xl font-bold tracking-tight ${isPositive ? 'text-white' : 'text-rose-400'}`}>
+              {isPositive ? '' : '-'}{formatAmount(Math.abs(net))}
+            </p>
+            {savingsRate !== null && (
+              <p className={`text-xs mt-1 font-medium ${isPositive ? 'text-emerald-400' : 'text-rose-400'}`}>
+                {isPositive ? `🎯 Saving ${savingsRate}% of income` : '⚠️ Spending more than earned'}
+              </p>
+            )}
+          </div>
+        )
+      })()}
+
       {/* Income / Expense stat cards */}
       <div className="flex gap-3 px-4 pb-4">
         <div className="flex-1 rounded-2xl bg-slate-800 p-4">
           <p className="text-xs text-slate-400 mb-1">Income</p>
-          <p className="text-xl font-bold text-emerald-400 truncate">{formatAmount(totalIncome)}</p>
+          <p className="text-lg font-bold text-emerald-400 truncate">{formatAmount(totalIncome)}</p>
         </div>
         <div className="flex-1 rounded-2xl bg-slate-800 p-4">
           <p className="text-xs text-slate-400 mb-1">Expense</p>
-          <p className="text-xl font-bold text-rose-400 truncate">{formatAmount(totalExpense)}</p>
+          <p className="text-lg font-bold text-rose-400 truncate">{formatAmount(totalExpense)}</p>
+          {totalIncome > 0 && (
+            <p className="text-[10px] text-slate-500 mt-0.5">
+              {Math.round((totalExpense / totalIncome) * 100)}% of income
+            </p>
+          )}
         </div>
       </div>
 
@@ -160,37 +185,30 @@ export function SummaryTab({ transactions, loading, error }: Props) {
           <div className="rounded-2xl bg-slate-800 overflow-hidden divide-y divide-slate-700/40">
             {recentTransactions.map((t, i) => {
               const gc = getGroupConfig(t.categoryGroup)
+              const isExpense = t.type === 'Expense'
               return (
-                <div key={i} className="flex items-center justify-between px-4 py-3 gap-2">
+                <div key={i} className="flex items-center gap-3 px-4 py-3">
+                  {/* Category icon bubble */}
+                  <div
+                    className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 text-base"
+                    style={{ backgroundColor: (gc?.color ?? '#6b7280') + '22' }}
+                  >
+                    {gc?.icon ?? '💸'}
+                  </div>
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-1.5">
+                    <div className="flex items-center gap-1">
                       <span className="text-sm font-medium text-white truncate">
                         {t.subcategory}
                       </span>
-                      {t.note && (
-                        <span className="text-xs text-slate-400 truncate">· {t.note}</span>
-                      )}
                     </div>
-                    <p className="text-xs text-slate-500 mt-0.5">{formatDisplayDate(t.date)}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">
+                      {formatDisplayDate(t.date)}
+                      {t.note ? ` · ${t.note}` : ''}
+                    </p>
                   </div>
-                  <div className="text-right flex-shrink-0">
-                    <span
-                      className={`text-sm font-semibold ${
-                        t.type === 'Expense' ? 'text-rose-400' : 'text-emerald-400'
-                      }`}
-                    >
-                      {t.type === 'Expense' ? '-' : '+'}
-                      {formatAmount(t.amount)}
-                    </span>
-                    {gc && (
-                      <p
-                        className="text-[10px] mt-0.5"
-                        style={{ color: gc.color }}
-                      >
-                        {gc.icon} {t.categoryGroup}
-                      </p>
-                    )}
-                  </div>
+                  <span className={`text-sm font-semibold flex-shrink-0 ${isExpense ? 'text-rose-400' : 'text-emerald-400'}`}>
+                    {isExpense ? '-' : '+'}{formatAmount(t.amount)}
+                  </span>
                 </div>
               )
             })}

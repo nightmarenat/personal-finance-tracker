@@ -383,15 +383,19 @@ export function AddTab({ onSaved, isDemo = false }: Props) {
               <button
                 key={val}
                 onClick={() => setValueAlignment(valueAlignment === val ? null : val)}
-                className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-2xl text-sm transition-all ${
+                className={`flex-1 flex flex-col items-center gap-1 py-2.5 rounded-2xl text-sm transition-all active:scale-95 ${
                   valueAlignment === val
-                    ? 'bg-slate-600 text-white'
-                    : 'bg-slate-800 text-slate-400'
+                    ? val === 'Worth It'
+                      ? 'bg-emerald-600/30 border border-emerald-500/60 text-emerald-300'
+                      : val === 'Neutral'
+                      ? 'bg-slate-600 border border-slate-400/40 text-white'
+                      : 'bg-rose-600/30 border border-rose-500/60 text-rose-300'
+                    : 'bg-slate-800 text-slate-400 border border-transparent'
                 }`}
               >
                 <span className="text-xl">{emoji}</span>
-                <span className="text-[10px] leading-tight text-center">
-                  {val === 'Not Worth It' ? 'No Worth' : val}
+                <span className="text-[10px] leading-tight text-center font-medium">
+                  {val === 'Not Worth It' ? 'Not Worth' : val}
                 </span>
               </button>
             ))}
