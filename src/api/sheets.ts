@@ -12,10 +12,11 @@ export async function fetchTransactions(scriptUrl: string): Promise<Transaction[
   if (data.error) throw new Error(data.error)
 
   const rows: string[][] = data.values ?? []
-  return rows.slice(1).flatMap((row) => {
+  return rows.slice(1).flatMap((row, index) => {
     const [date, type, amount, categoryGroup, subcategory, paymentMethod, valueAlignment, note] = row
     if (!date || !type || !amount) return []
     return [{
+      rowIndex: index + 2,   // row 1 = header; data starts at row 2
       date: date.trim(),
       type: type.trim() as Transaction['type'],
       amount: parseFloat(String(amount).replace(/,/g, '')) || 0,
@@ -26,6 +27,29 @@ export async function fetchTransactions(scriptUrl: string): Promise<Transaction[
       note: (note ?? '').trim(),
     }]
   })
+}
+
+export async function updateTransaction(
+  scriptUrl: string,
+  rowIndex: number,
+  transaction: Transaction,
+): Promise<void> {
+  const row = [
+    transaction.date,
+    transaction.type,
+    transaction.amount.toString(),
+    transaction.categoryGroup,
+    transaction.subcategory,
+    transaction.paymentMethod,
+    transaction.valueAlignment,
+    transaction.note,
+  ]
+  const encoded = encodeURIComponent(JSON.stringify(row))
+  const url = `${scriptUrl}?action=update&rowIndex=${rowIndex}&row=${encoded}`
+  const res = await fetch(url)
+  if (!res.ok) throw new Error(`Failed to update: ${res.status}`)
+  const data = await res.json()
+  if (data.error) throw new Error(data.error)
 }
 
 export async function appendTransaction(

@@ -3,7 +3,8 @@ export type PaymentMethod = 'Cash' | 'Credit Card' | 'Transfer'
 export type ValueAlignment = 'Worth It' | 'Neutral' | 'Not Worth It' | ''
 
 export interface Transaction {
-  date: string // M/D/YYYY stored in sheet
+  rowIndex?: number    // 1-based sheet row (undefined for new / demo transactions)
+  date: string        // M/D/YYYY stored in sheet
   type: TransactionType
   amount: number
   categoryGroup: string

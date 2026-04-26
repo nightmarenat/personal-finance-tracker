@@ -5,6 +5,7 @@
 @layer base {
   * {
     -webkit-tap-highlight-color: transparent;
+    box-sizing: border-box;
   }
 
   html,
@@ -19,6 +20,30 @@
     color: #f8fafc;
     font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'Segoe UI', sans-serif;
     -webkit-font-smoothing: antialiased;
+    /* Prevent text size adjustment on orientation change */
+    -webkit-text-size-adjust: 100%;
+  }
+
+  /* Prevent iOS zoom on input focus — must be >= 16px */
+  input,
+  textarea,
+  select {
+    font-size: 16px;
+  }
+
+  /* Remove tap delay on all buttons & links */
+  button,
+  a,
+  [role='button'] {
+    touch-action: manipulation;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  /* Momentum scrolling on all scroll containers */
+  .overflow-y-auto,
+  .overflow-y-scroll {
+    -webkit-overflow-scrolling: touch;
   }
 }
 
@@ -31,12 +56,19 @@
     padding-bottom: env(safe-area-inset-bottom);
   }
 
+  /* Tab bar clearance — 4rem tab height + safe area */
   .pb-tab-bar {
-    padding-bottom: calc(5rem + env(safe-area-inset-bottom));
+    padding-bottom: calc(4.5rem + env(safe-area-inset-bottom));
   }
 
   .bottom-tab-bar {
     padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Minimum 44pt touch target helper */
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
   }
 
   .scrollbar-hide {

@@ -3,8 +3,10 @@ import { BottomTabBar } from './components/BottomTabBar'
 import { SummaryTab } from './pages/SummaryTab'
 import { AddTab } from './pages/AddTab'
 import { BreakdownTab } from './pages/BreakdownTab'
+import { EditTransactionSheet } from './components/EditTransactionSheet'
 import { useAuth } from './context/AuthContext'
 import { useTransactions } from './hooks/useTransactions'
+import { updateTransaction } from './api/sheets'
 import { MOCK_TRANSACTIONS } from './data/mockTransactions'
 import type { TabId, Transaction } from './types'
 
@@ -129,21 +131,27 @@ function SetupScreen({ onDemo }: { onDemo: () => void }) {
 function doGet(e) {
   try {
     const action = e.parameter.action
+    const s = SpreadsheetApp
+      .getActiveSpreadsheet()
+      .getSheetByName(SHEET)
+
     if (action === 'read') {
-      const s = SpreadsheetApp
-        .getActiveSpreadsheet()
-        .getSheetByName(SHEET)
-      const values = s.getDataRange().getValues()
-      return ok({ values })
+      return ok({ values: s.getDataRange().getValues() })
     }
     if (action === 'append') {
       const row = JSON.parse(
         decodeURIComponent(e.parameter.row)
       )
-      SpreadsheetApp
-        .getActiveSpreadsheet()
-        .getSheetByName(SHEET)
-        .appendRow(row)
+      s.appendRow(row)
+      return ok({ success: true })
+    }
+    if (action === 'update') {
+      const rowIndex = parseInt(e.parameter.rowIndex)
+      const row = JSON.parse(
+        decodeURIComponent(e.parameter.row)
+      )
+      s.getRange(rowIndex, 1, 1, row.length)
+       .setValues([row])
       return ok({ success: true })
     }
     return ok({ error: 'Unknown action' })
@@ -159,9 +167,12 @@ function ok(data) {
 }`}</pre>
             </div>
 
-            <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3">
+            <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 space-y-2">
               <p className="text-xs text-amber-400 leading-relaxed">
                 ⚠️ After deploying, if you edit the script again you must click <strong>Deploy → Manage deployments → ✏️ edit → New version</strong> to apply changes.
+              </p>
+              <p className="text-xs text-amber-400 leading-relaxed">
+                💡 If you already deployed an older version of this script, paste the new script above and redeploy as a new version — this enables the <strong>Edit transaction</strong> feature.
               </p>
             </div>
           </div>
@@ -192,6 +203,7 @@ function AppShell({
   loading,
   error,
   onSaved,
+  onUpdated,
   isDemo,
   onExitDemo,
 }: {
@@ -199,10 +211,12 @@ function AppShell({
   loading: boolean
   error: string | null
   onSaved: (t?: Transaction) => void
+  onUpdated: (updated: Transaction) => Promise<void>
   isDemo: boolean
   onExitDemo: () => void
 }) {
   const [activeTab, setActiveTab] = useState<TabId>('summary')
+  const [editingTransaction, setEditingTransaction] = useState<Transaction | null>(null)
 
   // Shared month state — Summary and Breakdown always show the same month
   const now = new Date()
@@ -226,12 +240,22 @@ function AppShell({
     <div className="min-h-screen bg-slate-950 flex flex-col">
       <div className="safe-top bg-slate-950" />
       {isDemo && <DemoBanner onExit={onExitDemo} />}
+
+      {editingTransaction && (
+        <EditTransactionSheet
+          transaction={editingTransaction}
+          onSave={onUpdated}
+          onClose={() => setEditingTransaction(null)}
+        />
+      )}
+
       <main className="flex-1 overflow-hidden">
         <div className={activeTab === 'summary' ? 'block h-full' : 'hidden'}>
           <SummaryTab
             transactions={transactions} loading={loading} error={error}
             year={year} month={month} onPrev={prevMonth} onNext={nextMonth}
             isCurrentMonth={isCurrentMonth} onGoToday={goToday}
+            onEdit={isDemo ? undefined : setEditingTransaction}
           />
         </div>
         <div className={activeTab === 'add' ? 'block h-full' : 'hidden'}>
@@ -254,12 +278,20 @@ function AppShell({
 function RealApp() {
   const { scriptUrl } = useAuth()
   const { transactions, loading, error, refetch } = useTransactions(scriptUrl)
+
+  const handleUpdate = useCallback(async (updated: Transaction) => {
+    if (!scriptUrl || !updated.rowIndex) throw new Error('Cannot update: missing row info')
+    await updateTransaction(scriptUrl, updated.rowIndex, updated)
+    refetch()
+  }, [scriptUrl, refetch])
+
   return (
     <AppShell
       transactions={transactions}
       loading={loading}
       error={error}
       onSaved={refetch}
+      onUpdated={handleUpdate}
       isDemo={false}
       onExitDemo={() => {}}
     />
@@ -275,6 +307,7 @@ function DemoApp({ onExit }: { onExit: () => void }) {
       loading={false}
       error={null}
       onSaved={(t) => { if (t) setTransactions((prev) => [...prev, t]) }}
+      onUpdated={async () => {}}   // no-op for demo
       isDemo={true}
       onExitDemo={onExit}
     />

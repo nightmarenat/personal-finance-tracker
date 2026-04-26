@@ -27,44 +27,44 @@ function IconBreakdown({ active }: { active: boolean }) {
 
 export function BottomTabBar({ active, onChange }: Props) {
   return (
-    <nav className="fixed bottom-0 inset-x-0 z-50 bg-slate-900/95 backdrop-blur-sm border-t border-slate-700/50 bottom-tab-bar">
-      <div className="flex items-end">
-        {/* Summary */}
+    <nav className="fixed bottom-0 inset-x-0 z-50 bg-slate-900/96 backdrop-blur-md border-t border-slate-700/40 bottom-tab-bar">
+      <div className="flex items-center h-[56px]">
+        {/* Summary — 44pt min touch target */}
         <button
           onClick={() => onChange('summary')}
-          className={`flex-1 flex flex-col items-center gap-1 pt-3 pb-2 transition-colors ${
+          className={`flex-1 h-full flex flex-col items-center justify-center gap-0.5 transition-colors active:opacity-70 ${
             active === 'summary' ? 'text-violet-400' : 'text-slate-500'
           }`}
         >
           <IconSummary active={active === 'summary'} />
-          <span className="text-[10px] font-medium tracking-wide">Summary</span>
+          <span className="text-[11px] font-semibold">Summary</span>
         </button>
 
-        {/* Add — centre FAB */}
-        <div className="flex-1 flex justify-center items-center pb-1">
+        {/* Add — elevated FAB in centre */}
+        <div className="flex-1 flex justify-center items-center">
           <button
             onClick={() => onChange('add')}
-            className={`w-14 h-14 -mt-5 rounded-full flex items-center justify-center shadow-xl transition-all active:scale-95 ${
+            className={`w-[56px] h-[56px] -translate-y-3 rounded-2xl flex items-center justify-center shadow-2xl transition-all active:scale-90 ${
               active === 'add'
-                ? 'bg-violet-500 shadow-violet-700/50'
-                : 'bg-violet-600 shadow-violet-900/50'
+                ? 'bg-violet-500 shadow-violet-600/60'
+                : 'bg-violet-600 shadow-violet-900/60'
             }`}
           >
-            <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2.5} strokeLinecap="round">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth={2.8} strokeLinecap="round">
               <path d="M12 5v14M5 12h14" />
             </svg>
           </button>
         </div>
 
-        {/* Breakdown */}
+        {/* Breakdown — 44pt min touch target */}
         <button
           onClick={() => onChange('breakdown')}
-          className={`flex-1 flex flex-col items-center gap-1 pt-3 pb-2 transition-colors ${
+          className={`flex-1 h-full flex flex-col items-center justify-center gap-0.5 transition-colors active:opacity-70 ${
             active === 'breakdown' ? 'text-violet-400' : 'text-slate-500'
           }`}
         >
           <IconBreakdown active={active === 'breakdown'} />
-          <span className="text-[10px] font-medium tracking-wide">Breakdown</span>
+          <span className="text-[11px] font-semibold">Breakdown</span>
         </button>
       </div>
     </nav>
